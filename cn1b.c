@@ -1,98 +1,68 @@
 #include<stdio.h>
 #include<string.h>
-#include<stdlib.h>
+#define FLAG "01111110"
 
-void sender();
-void receiver(int *message, int l2);
+void bitStuffing(const char* input, char* output) {
+int count = 0;
+int j = 0;
+strcpy(output, FLAG);
+j += strlen(FLAG);
 
-int main(void)
-{
-    sender();
-    return 0;
+for (int i = 0; input[i] != '\0'; i++) {
+output[j++] = input[i];
+
+if (input[i] == '1') {
+count++;
+} else {
+count = 0;
 }
 
-void sender()
-{
-    int i, j, n, count = 0, zerocounter = 0, zero = 0;
-    int msg[50];
-    int result[100];
-    printf("Enter the number of bits of the message\n");
-    scanf("%d", &n);
-    printf("Enter the bits\n");
-    for (i = 0; i < n; i++)
-    {
-        scanf("%d", &msg[i]);
-    }
-    result[0] = 0;
-    result[1] = 1;
-    result[2] = 1;
-    result[3] = 1;
-    result[4] = 1;
-    result[5] = 1;
-    result[6] = 1;
-    result[7] = 0;
-    j = 8;
-    for (i = 0; i < n; i++)
-    {
-        if (msg[i] == 0)
-        {
-            result[j++] = msg[i];
-            zero = 1;
-            count = 0;
-        }
-        else
-        {
-            if (count == 5 && zero == 1)
-            {
-                result[j++] = 0;
-                zerocounter++;
-            }
-            result[j++] = msg[i];
-            count++;
-        }
-    }
-    result[j++] = 0;
-    result[j++] = 1;
-    result[j++] = 1;
-    result[j++] = 1;
-    result[j++] = 1;
-    result[j++] = 1;
-    result[j++] = 1;
-    result[j++] = 0;
-    int l1 = 16 + n + zerocounter;
-    printf("The length is %d\n", l1);
-    printf("The frame is\n");
-    for (i = 0; i < j; i++)
-    {
-        printf("%d", result[i]);
-    }
-    printf("\n");
-    receiver(result, l1);
+if (count == 5) {
+output[j++] = '0';
+count = 0;
+}
 }
 
-void receiver(int *result, int l2)
-{
-    int i, j = 0, counter = 0;
-    int mesg[100];
-    int l3 = l2 - 8;
-    for (i = 8; i < l3; i++)
-    {
-        if (result[i] == 0 && counter == 5)
-        {
-            i++;
-            mesg[j++] = result[i];
-            counter = 0;
-        }
-        else
-        {
-            mesg[j++] = result[i];
-            counter = (result[i] == 0) ? counter + 1 : 0;
-        }
-    }
-    printf("Receiver side message is: ");
-    for (i = 0; i < j; i++)
-    {
-        printf("%d", mesg[i]);
-    }
-    printf("\n");
+strcpy(&output[j], FLAG);
+}
+
+void bitDestuffing(const char* input, char* output) {
+int count = 0;
+int j = 0;
+int i = strlen(FLAG);
+
+while (input[i] != '\0') {
+if (input[i] == '1') {
+count++;
+output[j++] = '1';
+} else {
+if (count == 5) {
+count = 0;
+i++;
+continue;
+} else {
+count = 0;
+output[j++] = '0';
+}
+}
+i++;
+}
+output[j] = '\0';
+}
+
+int main() {
+char input[256];
+char stuffed[512];
+char destuffed[256];
+
+printf("Enter a binary string (only 0s and 1s): ");
+scanf("%s", input);
+
+bitStuffing(input, stuffed);
+printf("Stuffed Data: %s\n", stuffed);
+
+bitDestuffing(stuffed, destuffed);
+printf("De-stuffed Data: %s\n", destuffed);
+
+return 0;
 }
