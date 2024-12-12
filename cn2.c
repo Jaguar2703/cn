@@ -1,60 +1,71 @@
-#include<stdio.h>                                                                                                                                          
-#include<stdlib.h>
-#include<unistd.h>
-#include<string.h>
-#define N strlen(g)
-char t[120],cs[120],g[]="100000111";
-int a,c,e;
-void xor()
-{
- for(c=1;c<N;c++)
- cs[c]=((cs[c]==g[c])?'0':'1');
+#include <stdio.h>
+#include <string.h>
+#define MAX_LEN 100
+
+void xorOperation(char *dividend, char *divisor) {
+    for (int i = 0; i < strlen(divisor); i++) {
+        dividend[i] = (dividend[i] == divisor[i]) ? '0' : '1';
+    }
 }
-void crc()
-{
-for(e=0;e<N;e++)
- cs[e]=t[e];
- do
-  {
-   if(cs[0]=='1')
-    xor();
-   for(c=0;c<N-1;c++)
-cs[c]=cs[c+1];
-cs[c]=t[e++];
+
+void divide(char *data, char *generator, char *remainder) {
+    int dataLen = strlen(data);
+    int genLen = strlen(generator);
+    char temp[MAX_LEN];
+    strcpy(temp, data);
+
+    for (int i = 0; i <= dataLen - genLen; i++) {
+        if (temp[i] == '1') {
+            xorOperation(temp + i, generator);
+        }
+    }
+
+    strncpy(remainder, temp + dataLen - genLen + 1, genLen - 1);
+    remainder[genLen - 1] = '\0';
 }
-while(e<=a+N-1);
+
+void encode(char *data, char *generator, char *encodedData) {
+    int genLen = strlen(generator);
+    char paddedData[MAX_LEN];
+    sprintf(paddedData, "%s%s", data, "0");
+
+    char remainder[MAX_LEN];
+    divide(paddedData, generator, remainder);
+    sprintf(encodedData, "%s%s", data, remainder);
 }
-void main()
-{
-printf("enter the polynomial\n");
-scanf("%s",t);
-printf("generating polynomial is %s\n",g);
-a=strlen(t);
-for(e=a;e<a+N-1;e++)
-t[e]='0';
-printf("modified t[u] is %s\n",t);
-crc();
-printf("checksum is :%s\n",cs);
-for(e=a;e<a+N-1;e++)
-t[e]=cs[e-a];
-printf("final codeword is :%s\n",t);
-printf("test error detection 0(yes)1(no)?:\n");
-scanf("%d",&e);
-if(e==0)
- {
- do
-  {
-   printf("enter position where error has to be inserted\n");
-   scanf("%d",&e);
-  }
-while(e==0 || e>a+N-1);
- t[e-1]=(t[e-1]=='0')?'1':'0';
- printf("errorneous data %s\n",t);
+
+int decode(char *dataWithCRC, char *generator) {
+    char remainder[MAX_LEN];
+    divide(dataWithCRC, generator, remainder);
+    for (int i = 0; i < strlen(remainder); i++) {
+        if (remainder[i] == '1') {
+            return 0;
+        }
+    }
+    return 1;
 }
-crc();
-for(e=0;(e<N-1)&&(cs[e]!='1');e++);
- if(e<N-1)
-  printf("error detected\n");
- else
-  printf("error is not detected\n");
+
+int main() {
+    char generator[MAX_LEN];
+    char data[MAX_LEN];
+    char encodedData[MAX_LEN];
+
+    printf("Enter the generator polynomial (binary): ");
+    scanf("%s", generator);
+
+    printf("Enter the data (binary): ");
+    scanf("%s", data);
+
+    printf("Original Data: %s\n", data);
+    encode(data, generator, encodedData);
+    printf("Encoded Data: %s\n", encodedData);
+
+    int isValid = decode(encodedData, generator);
+    printf("Is received data valid? %s\n", isValid ? "Yes" : "No");
+
+    encodedData[strlen(encodedData) - 1] = (encodedData[strlen(encodedData) - 1] == '0') ? '1' : '0';
+    isValid = decode(encodedData, generator);
+    printf("Is received data with error valid? %s\n", isValid ? "Yes" : "No");
+
+    return 0;
 }
